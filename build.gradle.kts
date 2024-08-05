@@ -31,6 +31,7 @@ dependencies {
     implementation ("org.springframework.boot:spring-boot-starter-security")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.+")
     implementation ("org.postgresql:postgresql")
+    implementation ("org.springframework.boot:spring-boot-starter-validation")
 
 }
 

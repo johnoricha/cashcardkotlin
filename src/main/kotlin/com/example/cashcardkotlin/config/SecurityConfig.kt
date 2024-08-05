@@ -1,36 +1,31 @@
-package com.example.cashcardkotlin
+package com.example.cashcardkotlin.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetailsService
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.security.web.SecurityFilterChain
 
 @Configuration
-class SecurityConfig {
+class SecurityConfig(val authenticationProvider: AuthenticationProvider) {
 
     @Bean
     @Throws(Exception::class)
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         return http.authorizeHttpRequests { request ->
             request.
-                requestMatchers("auth/register")
+                requestMatchers("auth/**")
                     .permitAll().
-            requestMatchers("/cashcards/**")
+                requestMatchers("/cashcards/**")
                 .hasAnyRole("CARD-OWNER", "ADMIN")
         }.httpBasic(Customizer.withDefaults())
+            .authenticationProvider(authenticationProvider)
             .csrf { csrf -> csrf.disable() }.build()
-    }
-
-    @Bean
-    fun passwordEncoder(): PasswordEncoder {
-        return BCryptPasswordEncoder()
     }
 
     @Bean
