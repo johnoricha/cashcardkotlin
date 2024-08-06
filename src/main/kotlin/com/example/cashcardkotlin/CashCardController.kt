@@ -4,6 +4,8 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.web.bind.annotation.*
@@ -27,8 +29,11 @@ class CashCardController(val cashCardRepository: CashCardRepository, val userDet
 
     @GetMapping
     private fun findAll(pageable: Pageable, principal: Principal): ResponseEntity<List<CashCard>> {
-        val userDetails: UserDetails = userDetailsService.loadUserByUsername(principal.name)
-        if (userDetails.username == "john") {
+
+        val userDetails = userDetailsService.loadUserByUsername(principal.name) as User
+
+
+        if (userDetails.role == Role.ADMIN) {
             val pageOfCashCards = cashCardRepository.findAll(
                 PageRequest.of(
                     pageable.pageNumber,

@@ -13,19 +13,26 @@ data class User(
     val firstname: String? = null,
     val lastname: String? = null,
     val telephone: String? = null,
+    @Enumerated(value = EnumType.STRING)
+    val role: Role? = Role.USER,
     private val password: String? = null,
 ) : UserDetails {
 
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> {
-
-        return mutableListOf()
-
+        return mutableListOf(SimpleGrantedAuthority(this.role?.name))
     }
+
     override fun getPassword(): String {
-       return password!!
+        return password!!
     }
 
     override fun getUsername(): String {
         return email!!
     }
+}
+
+enum class Role {
+    USER,
+    OWNER,
+    ADMIN,
 }

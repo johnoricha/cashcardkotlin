@@ -24,7 +24,8 @@ class GlobalExceptionHandler {
             return ResponseEntity.badRequest().body(
                 RegisterResponse(
                     status = "Failed",
-                    message = errors["firstname"]!!
+                    message = errors["firstname"]!!,
+                    accessToken = ""
                 )
             )
         }
@@ -33,7 +34,18 @@ class GlobalExceptionHandler {
             return ResponseEntity.badRequest().body(
                 RegisterResponse(
                     status = "Failed",
-                    message = errors["lastname"]!!
+                    message = errors["lastname"]!!,
+                    accessToken = ""
+                )
+            )
+        }
+
+        if (errors.containsKey("role")) {
+            return ResponseEntity.badRequest().body(
+                RegisterResponse(
+                    status = "Failed",
+                    message = errors["role"]!!,
+                    accessToken = ""
                 )
             )
         }
@@ -42,7 +54,8 @@ class GlobalExceptionHandler {
             return ResponseEntity.badRequest().body(
                 RegisterResponse(
                     status = "Failed",
-                    message = "Please provide an email or phone number to login"
+                    message = "Please provide an email or phone number to login",
+                    accessToken = ""
                 )
             )
         }
@@ -50,7 +63,8 @@ class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(
             RegisterResponse(
                 status = "Failed",
-                message = "Email and Password are required"
+                message = "Email and Password are required",
+                accessToken = ""
             )
         )
     }

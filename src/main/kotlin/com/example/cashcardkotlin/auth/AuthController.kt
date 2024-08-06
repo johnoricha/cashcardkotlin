@@ -2,6 +2,7 @@ package com.example.cashcardkotlin.auth
 
 import com.example.cashcardkotlin.User
 import com.example.cashcardkotlin.UserRepository
+import com.example.cashcardkotlin.config.JwtService
 import com.example.cashcardkotlin.models.LoginRequest
 import com.example.cashcardkotlin.models.LoginResponse
 import com.example.cashcardkotlin.models.RegisterRequest
@@ -19,7 +20,8 @@ import org.springframework.web.bind.annotation.*
 class AuthController(
     val userRepository: UserRepository,
     val passwordEncoder: PasswordEncoder,
-    val authenticationManager: AuthenticationManager
+    val authenticationManager: AuthenticationManager,
+    val jwtService: JwtService
 ) {
 
     @PostMapping("/register")
@@ -30,17 +32,20 @@ class AuthController(
             telephone = registerRequest.telephone,
             firstname = registerRequest.firstname,
             lastname = registerRequest.lastname,
-            password = passwordEncoder.encode(registerRequest.password)
+            password = passwordEncoder.encode(registerRequest.password),
+            role = registerRequest.role
         )
 
         if (userRepository.findByEmail(registerRequest.email) != null) {
             return ResponseEntity.badRequest()
-                .body(RegisterResponse(status = "Failed", message = "Account already exists"))
+                .body(RegisterResponse(status = "Failed", message = "Account already exists", accessToken = ""))
         }
+
+        val jwt = jwtService.generateToken(user)
 
         userRepository.save(user)
 
-        return ResponseEntity.ok(RegisterResponse("Success", "Account created successfully!"))
+        return ResponseEntity.ok(RegisterResponse("Success", "Account created successfully!", jwt))
 
     }
 
@@ -53,7 +58,7 @@ class AuthController(
             )
         )
 
-        userRepository.findByEmail(loginRequest.email)
+        val user = userRepository.findByEmail(loginRequest.email)
             ?: return ResponseEntity.badRequest().body(
                 LoginResponse(
                     status = "Failed",
@@ -64,7 +69,9 @@ class AuthController(
                 )
             )
 
-        return ResponseEntity.ok(LoginResponse("Success", "Logged in successfully", "token", "refresh token"))
+        val jwt = jwtService.generateToken(user)
+
+        return ResponseEntity.ok(LoginResponse("Success", "Logged in successfully", jwt, "refresh token"))
     }
 
 }
