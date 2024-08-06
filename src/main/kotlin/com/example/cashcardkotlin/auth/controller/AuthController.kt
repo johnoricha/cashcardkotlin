@@ -1,12 +1,12 @@
-package com.example.cashcardkotlin.auth
+package com.example.cashcardkotlin.auth.controller
 
-import com.example.cashcardkotlin.User
-import com.example.cashcardkotlin.UserRepository
+import com.example.cashcardkotlin.user.User
 import com.example.cashcardkotlin.config.JwtService
-import com.example.cashcardkotlin.models.LoginRequest
-import com.example.cashcardkotlin.models.LoginResponse
-import com.example.cashcardkotlin.models.RegisterRequest
-import com.example.cashcardkotlin.models.RegisterResponse
+import com.example.cashcardkotlin.auth.models.LoginRequest
+import com.example.cashcardkotlin.auth.models.LoginResponse
+import com.example.cashcardkotlin.auth.models.RegisterRequest
+import com.example.cashcardkotlin.auth.models.RegisterResponse
+import com.example.cashcardkotlin.user.UserRepository
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.AuthenticationManager

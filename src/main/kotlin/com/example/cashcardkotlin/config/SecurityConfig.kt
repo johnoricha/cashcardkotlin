@@ -1,6 +1,6 @@
 package com.example.cashcardkotlin.config
 
-import com.example.cashcardkotlin.Role
+import com.example.cashcardkotlin.user.Role
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationProvider

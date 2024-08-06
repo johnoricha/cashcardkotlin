@@ -1,4 +1,4 @@
-package com.example.cashcardkotlin.models
+package com.example.cashcardkotlin.auth.models
 
 data class LoginResponse(
     val status: String,

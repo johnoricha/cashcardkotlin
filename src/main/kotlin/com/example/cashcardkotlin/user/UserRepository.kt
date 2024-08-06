@@ -1,4 +1,4 @@
-package com.example.cashcardkotlin
+package com.example.cashcardkotlin.user
 
 import org.springframework.data.jpa.repository.JpaRepository
 

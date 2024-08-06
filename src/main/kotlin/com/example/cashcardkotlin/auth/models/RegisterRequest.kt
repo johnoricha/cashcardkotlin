@@ -1,6 +1,6 @@
-package com.example.cashcardkotlin.models
+package com.example.cashcardkotlin.auth.models
 
-import com.example.cashcardkotlin.Role
+import com.example.cashcardkotlin.user.Role
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 

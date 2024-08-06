@@ -1,4 +1,4 @@
-package com.example.cashcardkotlin
+package com.example.cashcardkotlin.cashcard.models
 
 data class CashCardRequest(val amount: Double) {
 

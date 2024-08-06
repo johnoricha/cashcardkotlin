@@ -3,7 +3,7 @@ package example.cashcardkotlin
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.jayway.jsonpath.JsonPath
-import com.example.cashcardkotlin.CashCard
+import com.example.cashcardkotlin.cashcard.models.CashCard
 import com.example.cashcardkotlin.CashCardKotlinApplication
 import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat

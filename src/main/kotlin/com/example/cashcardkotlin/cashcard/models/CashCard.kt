@@ -1,4 +1,4 @@
-package com.example.cashcardkotlin;
+package com.example.cashcardkotlin.cashcard.models;
 
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue

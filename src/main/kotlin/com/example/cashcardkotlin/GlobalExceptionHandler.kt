@@ -1,6 +1,6 @@
 package com.example.cashcardkotlin
 
-import com.example.cashcardkotlin.models.RegisterResponse
+import com.example.cashcardkotlin.auth.models.RegisterResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.FieldError

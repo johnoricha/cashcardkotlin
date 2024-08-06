@@ -1,4 +1,4 @@
-package com.example.cashcardkotlin
+package com.example.cashcardkotlin.user
 
 import jakarta.persistence.*
 import org.springframework.security.core.GrantedAuthority

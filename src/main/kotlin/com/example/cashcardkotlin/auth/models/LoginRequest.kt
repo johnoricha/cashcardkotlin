@@ -1,4 +1,4 @@
-package com.example.cashcardkotlin.models
+package com.example.cashcardkotlin.auth.models
 
 import jakarta.validation.constraints.NotBlank
 
