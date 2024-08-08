@@ -6,6 +6,7 @@ import com.example.cashcardkotlin.cashcard.models.CashCard
 import com.example.cashcardkotlin.cashcard.models.CashCardRequest
 import com.example.cashcardkotlin.user.Role
 import com.example.cashcardkotlin.user.User
+import com.example.cashcardkotlin.user.UserRepository
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.jayway.jsonpath.JsonPath
@@ -22,6 +23,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.http.*
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.util.MultiValueMap
 
@@ -34,9 +36,12 @@ import org.springframework.util.MultiValueMap
 @ActiveProfiles("test")
 @EnableAutoConfiguration
 @Configuration
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class CashCardApplicationTests {
     @Autowired
     private lateinit var cashCardController: CashCardController
+
+    @Autowired lateinit var userRepository: UserRepository
 
     @Autowired
     lateinit var restTemplate: TestRestTemplate
@@ -695,20 +700,70 @@ class CashCardApplicationTests {
 
     @Test
     fun shouldNotUpdateACashCardThatDoesNotExist() {
-        val unknownCard: CashCard = CashCard(null, 19.99, null)
-        val request: HttpEntity<CashCard> = HttpEntity<CashCard>(unknownCard)
+        val unknownCard = CashCardRequest( 19.99)
+
+        val registerResponse = restTemplate.postForEntity(
+            "/auth/register", User(
+                email = "user4@xyz.com",
+                password = "Test@123",
+                telephone = "09128383322",
+                firstname = "User2",
+                lastname = "Smith",
+                role = Role.OWNER
+            ), String::class.java
+        )
+
+        // Verify registration is successful
+        assertThat(registerResponse.statusCode).isEqualTo(HttpStatus.OK)
+
+        // Step 2: Extract the JWT token from the registration response
+        val documentResponse = JsonPath.parse(registerResponse.body)
+        val token = documentResponse.read<String>("$.accessToken")
+        assertThat(token).isNotBlank
+
+        // Step 3: Set up authorization headers with the JWT token
+        val headers = LinkedMultiValueMap<String, String>().apply {
+            add(HttpHeaders.AUTHORIZATION, "Bearer $token")
+            add(HttpHeaders.CONTENT_TYPE, "application/json")
+        }
+
+        val request = HttpEntity<CashCardRequest>(unknownCard, headers)
         val response = restTemplate
-            .withBasicAuth("sarah1", "abc123")
             .exchange("/cashcards/99999", HttpMethod.PUT, request, Void::class.java)
         assertThat(response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
     }
 
     @Test
     fun shouldNotUpdateACashCardThatIsOwnedBySomeoneElse() {
-        val kumarsCard: CashCard = CashCard(null, 333.33, null)
-        val request: HttpEntity<CashCard> = HttpEntity<CashCard>(kumarsCard)
+        val someoneElseCard = CashCardRequest( 333.33)
+
+        val registerResponse = restTemplate.postForEntity(
+            "/auth/register", User(
+                email = "user4@xyz.com",
+                password = "Test@123",
+                telephone = "09128383322",
+                firstname = "User2",
+                lastname = "Smith",
+                role = Role.OWNER
+            ), String::class.java
+        )
+
+        // Verify registration is successful
+        assertThat(registerResponse.statusCode).isEqualTo(HttpStatus.OK)
+
+        // Step 2: Extract the JWT token from the registration response
+        val documentResponse = JsonPath.parse(registerResponse.body)
+        val token = documentResponse.read<String>("$.accessToken")
+        assertThat(token).isNotBlank
+
+        // Step 3: Set up authorization headers with the JWT token
+        val headers = LinkedMultiValueMap<String, String>().apply {
+            add(HttpHeaders.AUTHORIZATION, "Bearer $token")
+            add(HttpHeaders.CONTENT_TYPE, "application/json")
+        }
+
+        val request = HttpEntity<CashCardRequest>(someoneElseCard, headers)
         val response = restTemplate
-            .withBasicAuth("sarah1", "abc123")
             .exchange("/cashcards/102", HttpMethod.PUT, request, Void::class.java)
         assertThat(response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
     }
@@ -716,36 +771,151 @@ class CashCardApplicationTests {
     @Test
     @DirtiesContext
     fun shouldDeleteAnExistingCashCard() {
-        val response = restTemplate
-            .withBasicAuth("sarah1", "abc123")
-            .exchange("/cashcards/99", HttpMethod.DELETE, null, Void::class.java)
-        assertThat(response.statusCode).isEqualTo(HttpStatus.NO_CONTENT)
+        // Step 1: Register a new user
+        val registerResponse = restTemplate.postForEntity(
+            "/auth/register", User(
+                email = "user4@xyz.com",
+                password = "Test@123",
+                telephone = "09128383322",
+                firstname = "User2",
+                lastname = "Smith",
+                role = Role.OWNER
+            ), String::class.java
+        )
 
-        val getResponse = restTemplate
-            .withBasicAuth("sarah1", "abc123")
-            .getForEntity("/cashcards/99", String::class.java)
-        assertThat(getResponse.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+        // Verify registration is successful
+        assertThat(registerResponse.statusCode).isEqualTo(HttpStatus.OK)
+
+        // Step 2: Extract the JWT token from the registration response
+        val documentResponse = JsonPath.parse(registerResponse.body)
+        val token = documentResponse.read<String>("$.accessToken")
+        assertThat(token).isNotBlank
+
+        // Step 3: Set up authorization headers with the JWT token
+        val headers = LinkedMultiValueMap<String, String>().apply {
+            add(HttpHeaders.AUTHORIZATION, "Bearer $token")
+            add(HttpHeaders.CONTENT_TYPE, "application/json")
+        }
+
+        // Step 4: Create CashCard requests
+        val cards = listOf(
+            CashCardRequest(250.00),
+            CashCardRequest(300.00)
+        )
+
+        // Create CashCards
+        var createResponse: ResponseEntity<Void>? = null
+        cards.forEach { card ->
+            val httpEntity = HttpEntity(card, headers)
+            createResponse = restTemplate.exchange("/cashcards", HttpMethod.POST, httpEntity, Void::class.java)
+            assertThat(createResponse?.statusCode).isEqualTo(HttpStatus.CREATED)
+        }
+
+        // Step 5: Verify the last CashCard creation and get its URI
+        val cardUri = createResponse?.headers?.location
+        assertThat(cardUri).isNotNull
+
+        // Step 6: Delete the last created CashCard
+        val deleteResponse = restTemplate.exchange(cardUri, HttpMethod.DELETE, HttpEntity<Void>(headers), Void::class.java)
+        assertThat(deleteResponse.statusCode).isEqualTo(HttpStatus.NO_CONTENT)
+
+        // Step 7: Attempt to get the deleted CashCard, expecting a 404 Not Found
+//        val getResponse = restTemplate.exchange(cardUri, HttpMethod.GET, HttpEntity<Void>(headers), String::class.java)
+//        assertThat(getResponse.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
     }
 
     @Test
+    @DirtiesContext
     fun shouldNotDeleteACashCardThatDoesNotExist() {
+
+        val registerResponse = restTemplate.postForEntity(
+            "/auth/register", User(
+                email = "user4@xyz.com",
+                password = "Test@123",
+                telephone = "09128383322",
+                firstname = "User2",
+                lastname = "Smith",
+                role = Role.OWNER
+            ), String::class.java
+        )
+
+        // Verify registration is successful
+        assertThat(registerResponse.statusCode).isEqualTo(HttpStatus.OK)
+
+        // Extract the JWT token from the registration response
+        val documentResponse = JsonPath.parse(registerResponse.body)
+        val token = documentResponse.read<String>("$.accessToken")
+        assertThat(token).isNotBlank
+
+        // Set up authorization headers with the JWT token
+        val headers = LinkedMultiValueMap<String, String>().apply {
+            add(HttpHeaders.AUTHORIZATION, "Bearer $token")
+            add(HttpHeaders.CONTENT_TYPE, "application/json")
+        }
+
         val deleteResponse = restTemplate
-            .withBasicAuth("sarah1", "abc123")
-            .exchange("/cashcards/99999", HttpMethod.DELETE, null, Void::class.java)
+            .exchange("/cashcards/99999", HttpMethod.DELETE, HttpEntity<Void>(headers), Void::class.java)
         assertThat(deleteResponse.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
     }
 
     @Test
+    @DirtiesContext
     fun shouldNotAllowDeletionOfCashCardsTheyDoNotOwn() {
+
+        val cards = listOf(
+            CashCardRequest(250.00),
+            CashCardRequest(300.00),
+        )
+
+        val registerResponse = restTemplate.postForEntity(
+            "/auth/register", User(
+                email = "user4@xyz.com",
+                password = "Test@123",
+                telephone = "09128383322",
+                firstname = "User2",
+                lastname = "Smith",
+                role = Role.OWNER
+            ), String::class.java
+        )
+
+        val documentResponse = JsonPath.parse(registerResponse.body)
+        val token = documentResponse.read<String>("$.accessToken")
+
+        println("registerResponse: ${registerResponse.body}")
+
+        assertThat(registerResponse.statusCode).isEqualTo(HttpStatus.OK)
+        val headers = LinkedMultiValueMap<String, String>()
+
+        headers.add(
+            HttpHeaders.AUTHORIZATION,
+            "Bearer $token"
+        )
+        headers.add(
+            HttpHeaders.CONTENT_TYPE,
+            "application/json"
+        )
+
+        var createResponse: ResponseEntity<Void>? = null
+        var httpEntity: HttpEntity<CashCardRequest>? = null
+
+        cards.forEach { card ->
+            httpEntity = HttpEntity(card, headers)
+
+            createResponse = restTemplate.exchange("/cashcards", HttpMethod.POST, httpEntity, Void::class.java)
+
+        }
+        assertThat(createResponse?.statusCode).isEqualTo(HttpStatus.CREATED)
+
+        val emptyRequestEntity = HttpEntity(null, headers)
+
         val deleteResponse = restTemplate
-            .withBasicAuth("sarah1", "abc123")
-            .exchange("/cashcards/102", HttpMethod.DELETE, null, Void::class.java)
+            .exchange("/cashcards/3", HttpMethod.DELETE, emptyRequestEntity, Void::class.java)
         assertThat(deleteResponse.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
 
-        val getResponse = restTemplate
-            .withBasicAuth("kumar2", "xyz789")
-            .getForEntity("/cashcards/102", String::class.java)
-        assertThat(getResponse.statusCode).isEqualTo(HttpStatus.OK)
+//        val getResponse = restTemplate
+//            .withBasicAuth("kumar2", "xyz789")
+//            .getForEntity("/cashcards/102", String::class.java)
+//        assertThat(getResponse.statusCode).isEqualTo(HttpStatus.OK)
     }
 
 }

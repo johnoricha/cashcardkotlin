@@ -129,6 +129,9 @@ class CashCardController(val cashCardRepository: CashCardRepository,
 
     @DeleteMapping("/{id}")
     fun deleteCashCard(@PathVariable id: Long, principal: Principal): ResponseEntity<Void> {
+
+        println("deleteCashCard called: id: $id, principal: $principal")
+
         if (cashCardRepository.existsByIdAndOwner(id, principal.name)) {
             cashCardRepository.deleteById(id)
             return ResponseEntity.noContent().build()

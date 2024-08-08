@@ -22,6 +22,7 @@ class AppConfig(val userRepository: UserRepository) {
     @Bean
     fun userDetailsService(): UserDetailsService {
         return UserDetailsService { username: String? ->
+            println("userdetailsservice: username: $username")
             userRepository.findByEmail(username!!) ?: throw UsernameNotFoundException("User not found")
         }
     }
