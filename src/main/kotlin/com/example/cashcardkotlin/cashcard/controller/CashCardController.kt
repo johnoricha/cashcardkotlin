@@ -4,7 +4,9 @@ import com.example.cashcardkotlin.cashcard.repository.CashCardRepository
 import com.example.cashcardkotlin.user.Role
 import com.example.cashcardkotlin.user.User
 import com.example.cashcardkotlin.cashcard.models.CashCard
+import com.example.cashcardkotlin.cashcard.models.CashCardDto
 import com.example.cashcardkotlin.cashcard.models.CashCardRequest
+import com.example.cashcardkotlin.user.UserRepository
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
@@ -16,21 +18,27 @@ import java.security.Principal
 
 @RestController
 @RequestMapping("/cashcards")
-class CashCardController(val cashCardRepository: CashCardRepository, val userDetailsService: UserDetailsService) {
+class CashCardController(val cashCardRepository: CashCardRepository,
+                         val userRepository: UserRepository,
+                         val userDetailsService: UserDetailsService) {
 
     @GetMapping("/{requestedId}")
-    fun findById(@PathVariable requestedId: Long, principal: Principal): ResponseEntity<CashCard> {
+    fun findById(@PathVariable requestedId: Long, principal: Principal): ResponseEntity<CashCardDto> {
+
+        println("findById: id: $requestedId, principal: ${principal.name}")
 
         val card = cashCardRepository.findByIdAndOwner(requestedId, principal.name)
 
+        println("findById: card: $card")
+
         if (card != null) {
-            return ResponseEntity.ok(card)
+            return ResponseEntity.ok(card.toCashCardDto())
         }
         return ResponseEntity.notFound().build()
     }
 
     @GetMapping
-    private fun findAll(pageable: Pageable, principal: Principal): ResponseEntity<List<CashCard>> {
+    private fun findAll(pageable: Pageable, principal: Principal): ResponseEntity<List<CashCardDto>> {
 
         val userDetails = userDetailsService.loadUserByUsername(principal.name) as User
 
@@ -43,7 +51,9 @@ class CashCardController(val cashCardRepository: CashCardRepository, val userDet
                     pageable.getSortOr(Sort.by(Sort.Direction.ASC, "amount", "id"))
                 )
             )
-            return ResponseEntity.ok(pageOfCashCards.content)
+            val content = pageOfCashCards.map { cashCard -> cashCard.toCashCardDto()}.content
+
+            return ResponseEntity.ok(content)
         }
 
         println("principal: $principal")
@@ -54,7 +64,9 @@ class CashCardController(val cashCardRepository: CashCardRepository, val userDet
                 pageable.getSortOr(Sort.by(Sort.Direction.ASC, "amount"))
             )
         )
-        return ResponseEntity.ok(pageOfCashCards.content)
+        val content = pageOfCashCards.map { cashCard -> cashCard.toCashCardDto()}.content
+
+        return ResponseEntity.ok(content)
     }
 
     @PostMapping
@@ -67,7 +79,11 @@ class CashCardController(val cashCardRepository: CashCardRepository, val userDet
             return ResponseEntity.badRequest().body("amount cannot be null")
         }
 
-            val newCashCard = cashCardRequest.toCashCard(amount = cashCardRequest.amount, owner = principal.name)
+        val user = userRepository.findByEmail(principal.name) as User
+
+            val newCashCard = cashCardRequest.toCashCard(amount = cashCardRequest.amount,
+                user = user,
+                owner = principal.name)
 
         val savedCashCard = cashCardRepository.save(newCashCard)
 
@@ -87,17 +103,23 @@ class CashCardController(val cashCardRepository: CashCardRepository, val userDet
         principal: Principal
     ): ResponseEntity<Void> {
 
+        println("updatedCashCardRequest: $updatedCashCardRequest")
+
         val cashCard = cashCardRepository.findByIdAndOwner(id, principal.name)
 
         if (cashCard != null) {
 
             if (cashCardRepository.existsByIdAndOwner(id, principal.name)) {
+
+                val user = userRepository.findByEmail(principal.name) as User
+
                 cashCardRepository.save(
-                    cashCard.copy(
-                        id = id,
-                        amount = updatedCashCardRequest.amount,
-                        owner = principal.name
-                    )
+                    cashCard.apply {
+                        this.id = id
+                        this.amount = updatedCashCardRequest.amount
+                        this.owner = principal.name
+                        this.user = user
+                    }
                 )
                 return ResponseEntity.noContent().build()
             }

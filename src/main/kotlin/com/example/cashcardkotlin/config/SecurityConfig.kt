@@ -19,10 +19,13 @@ class SecurityConfig(
     @Throws(Exception::class)
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         return http.authorizeHttpRequests { request ->
-            request.
-                requestMatchers("auth/**")
+            request
+                .requestMatchers("/h2-console").permitAll()
+                .requestMatchers("auth/**")
                     .permitAll()
                 .requestMatchers("/cashcards")
+                .hasAnyAuthority(Role.ADMIN.name, Role.OWNER.name)
+                .requestMatchers("/cashcards/**")
                 .hasAnyAuthority(Role.ADMIN.name, Role.OWNER.name)
         }
             .sessionManagement(Customizer.withDefaults())

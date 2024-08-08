@@ -1,4 +1,14 @@
-INSERT INTO CASH_CARD(ID, AMOUNT, OWNER) VALUES (99, 123.45, 'sarah1');
-INSERT INTO CASH_CARD(ID, AMOUNT, OWNER) VALUES (100, 1.00, 'sarah1');
-INSERT INTO CASH_CARD(ID, AMOUNT, OWNER) VALUES (101, 150.00, 'sarah1');
-INSERT INTO CASH_CARD(ID, AMOUNT, OWNER) VALUES (102, 200.00, 'kumar2');
+-- -- Insert users
+--
+-- INSERT INTO users (email, firstname, lastname, telephone, role, password)
+-- VALUES ('user1@xyz.com', 'User1', 'Lastname1', '09123456789', 'USER', 'encryptedpassword1');
+--
+-- INSERT INTO users (email, firstname, lastname, telephone, role, password)
+-- VALUES ('user2@xyz.com', 'User2', 'Lastname2', '09876543210', 'OWNER', 'encryptedpassword2');
+--
+-- -- Insert cashcards associated with the above users
+-- INSERT INTO cash_card (amount, owner, user_id)
+-- VALUES (100.00, 'User1', (SELECT id FROM users WHERE email = 'user1@xyz.com'));
+--
+-- INSERT INTO cash_card (amount, owner, user_id)
+-- VALUES (200.00, 'User2', (SELECT id FROM users WHERE email = 'user2@xyz.com'));
