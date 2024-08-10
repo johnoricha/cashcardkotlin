@@ -10,7 +10,7 @@ data class CashCard(
     var id: Long? = null,
     var amount: Double? = null,
     var owner: String? = null,
-    @ManyToOne(fetch = FetchType.EAGER, cascade = [CascadeType.ALL])
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     var user: User? = null
 ) {

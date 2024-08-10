@@ -14,7 +14,7 @@ data class User(
     val firstname: String? = null,
     val lastname: String? = null,
     val telephone: String? = null,
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = [CascadeType.ALL])
+    @OneToMany(mappedBy = "user")
     val cashcards: Set<CashCard> = mutableSetOf(),
     @Enumerated(value = EnumType.STRING)
     val role: Role? = Role.USER,

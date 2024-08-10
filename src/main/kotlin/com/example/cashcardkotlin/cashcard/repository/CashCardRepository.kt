@@ -8,7 +8,6 @@ import org.springframework.data.repository.PagingAndSortingRepository
 import org.springframework.stereotype.Repository
 
 
-@Repository
 interface CashCardRepository: JpaRepository<CashCard, Long>, PagingAndSortingRepository<CashCard, Long> {
 
     fun findByIdAndOwner(id: Long, owner: String): CashCard?
