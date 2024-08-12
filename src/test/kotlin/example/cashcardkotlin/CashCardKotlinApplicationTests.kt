@@ -66,6 +66,23 @@ class CashCardApplicationTests {
     }
 
     @Test
+    fun shouldNotRegisterUserWithInvalidDetails() {
+
+        // user has no email
+        val user= User(
+            email = "",
+            password = "password",
+            telephone = "123",
+            firstname = "User",
+            lastname = "Smith",
+            role = Role.OWNER
+        )
+        val response = restTemplate.postForEntity("/auth/register", user, String::class.java)
+        assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+
+    }
+
+    @Test
     fun shouldReturnACashCardWhenDataIsSaved() {
         val token = registerUser()
 
