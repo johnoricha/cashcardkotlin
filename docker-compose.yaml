@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: cashcard_postgres_db
+    environment:
+      POSTGRES_USER: #your db username
+      POSTGRES_PASSWORD: #your db password
+      POSTGRES_DB: cashcarddockerdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  springboot-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: springboot_app
+    ports:
+      - "8383:8181"
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cashcarddockerdb
+      SPRING_DATASOURCE_USERNAME: #your db username
+      SPRING_DATASOURCE_PASSWORD: #your db password
+
+volumes:
+  postgres_data:
